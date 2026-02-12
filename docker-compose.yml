@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  data-validator_demo:
+    image: data-validator
+    build:
+      context: ./data-validator
+      dockerfile: Dockerfile
+      # network: host
+    network_mode: host
+    container_name: data-validator_demo
+    env_file: ./.env
+    volumes:
+      - ${HOST_BASE_DATA_DIR}:/home/input_data
+      - ./data-validator/script_files:/home/script_files
+      - ${HOST_ROOT_DIR}:/home/experiment
+
+
+  ippocratedb_demo:
+    build:
+      context: ./omop/IPPOCRATE_omop_db
+      dockerfile: Dockerfile
+      # network: host
+    depends_on:
+      data-validator_demo:
+        condition: service_completed_successfully
+    network_mode: host
+    container_name: ippocratedb_demo
+    hostname: omop6postgres14
+    env_file: ./.env
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ${HOST_ROOT_DIR}/CLINICAL:/home/clinical_data
+      - ${HOST_ROOT_DIR}/IMAGES:/home/images
+      - ${HOST_ROOT_DIR}/GENOMICS:/home/genomics 
+      - ${HOST_ROOT_DIR}/PROTEOMICS:/home/proteomics 
+      - ${HOST_ROOT_DIR}/LIPIDOMICS:/home/lipidomics 
+      - ${HOST_ROOT_DIR}/PROTOCOL:/home/protocol
+      - ${HOST_ROOT_DIR}/LOCALCONFIG:/home/local_config 
+      - ${HOST_ROOT_DIR}/OUTPUT:/home/output
+      - ./omop/IPPOCRATE_omop_db/exec_files:/home/exec_files
+      - ./omop/IPPOCRATE_omop_db/build_files:/home/build_files
+      - ./omop/IPPOCRATE_omop_db/OMOPv6-PSQL-Scripts:/home/omopv6ddl
+
+  nvflare-client_demo:
+    image: nvflare-cuda124
+    container_name: nvflare-client
+    ports: 
+      - "6006:6006"
+    network_mode: host
+    shm_size: 8gb
+    runtime: nvidia
+    env_file: ./.env
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+     # - NVIDIA_DISABLE_REQUIRE=1
+    working_dir: /home/${POSTGRES_USER}
+    volumes:
+      - ${HOST_ROOT_DIR}/CLINICAL:/home/clinical_data 
+      - ${HOST_ROOT_DIR}/IMAGES:/home/images 
+      - ${HOST_ROOT_DIR}/GENOMICS:/home/genomics 
+      - ${HOST_ROOT_DIR}/PROTEOMICS:/home/proteomics 
+      - ${HOST_ROOT_DIR}/LIPIDOMICS:/home/lipidomics 
+      - ${HOST_ROOT_DIR}/PROTOCOL:/home/protocol 
+      - ${HOST_ROOT_DIR}/OUTPUT:/home/output
+      - ${KIT_Folder}:/home/federation_kit
+    stdin_open: true
+    tty: true
+
+  
+
+

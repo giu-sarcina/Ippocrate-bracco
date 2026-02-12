@@ -1,0 +1,37 @@
+{
+"format_version": 2,
+"components": [
+    {
+    "id": "persistor",
+    "path": "nvflare.app_common.np.np_model_persistor.NPModelPersistor",
+    "args": {}
+    },
+    {
+    "id": "shareable_generator",
+    "path": "nvflare.app_common.shareablegenerators.full_model_shareable_generator.FullModelShareableGenerator",
+    "args": {}
+    },
+    {
+    "id": "aggregator",
+    "path": "PCA_aggregator.PCAAggregator",
+    "args": {}
+        }
+],
+"workflows": [
+    {
+    "path": "PCA_controller.PCAController",  
+    "args": {
+        "results_path": "/home/federation_kit/federated_PCA/results",
+        "min_clients": 1,
+        "num_rounds": 1,
+        "start_round": 0,
+        "wait_time_after_min_received": 10,
+        "aggregator_id": "aggregator",
+        "persistor_id": "persistor",
+        "shareable_generator_id": "shareable_generator",
+        "train_task_name": "PCA_fit",
+        "train_timeout": 6000
+    }
+    }
+]
+}

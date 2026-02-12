@@ -1,0 +1,16 @@
+{
+    "Local config": {
+        "study path": "/home/cristina.iudica/xray_radiography_validator/ROOT_x-rays_CLIENT_1",
+        "input dir": "/home/cristina.iudica/INPUT_x-rays_CLIENT_1",
+        "patients list": "patients.csv",
+        "number of patients": 3611,
+        "image": {
+            "number of series per patient": 1,
+            "series_mapping": {
+                "series001_rx": "*/series1"
+            } 
+        }
+    }
+}
+
+

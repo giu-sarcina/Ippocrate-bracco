@@ -1,0 +1,19 @@
+
+{
+    "format_version": 2,
+    "components": [
+    ],
+    "executors": [
+      {
+        "tasks": ["FID_to_similarity"],
+        "executor":{
+          "id": "executor",
+          "path": "FID_executor.FIDExecutor",
+          "args": {
+            "series_name" : "series001_mri"
+      }}
+      }
+    ]
+  }
+  
+  

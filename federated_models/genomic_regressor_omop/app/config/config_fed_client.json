@@ -1,0 +1,37 @@
+{
+    "format_version": 2,
+    "BATCH_SIZE": 8,
+    "L_RATE": 0.001,
+    "L_2": 0.01,
+    "EPOCHS": 4,
+    "executors": [
+        {
+            "tasks": [
+                "train",
+                "submit_model",
+                "validate"
+            ],
+            "executor": {
+                "id": "Executor",
+                "path": "nvflare.app_common.executors.learner_executor.LearnerExecutor",
+                "args": {
+                    "learner_id": "linear-learner"
+                }
+            }
+        }
+    ],
+    "task_result_filters": [],
+    "task_data_filters": [],
+    "components": [
+        {
+            "id": "linear-learner",
+            "path": "linear_learner.Linear_Learner",
+            "args": {
+                "aggregation_epochs": "{EPOCHS}",
+                "lr": "{L_RATE}",
+                "l2": "{L_2}",
+                "batch_size": "{BATCH_SIZE}"
+            }
+        }
+    ]
+}

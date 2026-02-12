@@ -1,0 +1,11 @@
+{
+    "name": "federated_PCA",
+    "resource_spec": {}, 
+    "min_clients" : 1,
+    "deploy_map": {
+    "app": [
+        "@ALL"
+      ]
+      }
+  }
+  

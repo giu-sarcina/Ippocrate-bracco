@@ -1,0 +1,8 @@
+torchvision
+torchmetrics
+numpy
+tenseal
+seaborn
+pandas
+psycopg2-binary
+pydicom

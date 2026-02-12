@@ -1,0 +1,17 @@
+
+{
+    "format_version": 2,
+    "components": [
+    ],
+    "executors": [
+      {
+        "tasks": ["Data_standardization", "PCA_fit", "Data_similarity"],
+        "executor":{
+          "id": "executor",
+          "path": "PCA_executor.PCAExecutor"
+      }
+      }
+    ]
+  }
+  
+  

@@ -1,0 +1,68 @@
+{
+    "format_version": 2,
+    "min_clients": 1,
+    "num_rounds": 1,
+    "server": {
+      "heart_beat_timeout": 600
+    },
+    "task_data_filters": [],
+    "task_result_filters": [],
+    "components": [
+      {
+        "id": "persistor",
+        "name": "PTFileModelPersistor",
+        "args": {
+        "model": {
+              "path": "unet.UNet3D",
+              "args": {
+                "in_channels": 1,
+                "out_classes": 1,
+                "dimensions": 3,
+                "num_encoding_blocks": 3,
+                "out_channels_first_layer": 8,
+                "normalization": "batch",
+                "upsampling_type": "linear",
+                "padding": 1,
+                "activation": "PReLU"
+              }
+            },
+        "global_model_file_name": "global_model.pt",
+        "best_global_model_file_name": "best_model.pt"
+        }
+      },
+      {
+        "id": "shareable_generator",
+        "name": "FullModelShareableGenerator",
+        "args": {}
+      },
+      {
+        "id": "aggregator",
+        "name": "InTimeAccumulateWeightedAggregator",
+        "args": {}
+      },
+      {
+        "id": "model_selector",
+        "name": "IntimeModelSelector",
+        "args": {
+          "weigh_by_local_iter": true
+        }
+      }
+    ],
+    "workflows": [
+      {
+        "id": "scatter_and_gather",
+        "name": "ScatterAndGather",
+        "args": {
+          "min_clients": "{min_clients}",
+          "num_rounds": "{num_rounds}",
+          "start_round": 1,
+          "wait_time_after_min_received": 10,
+          "aggregator_id": "aggregator",
+          "persistor_id": "persistor",
+          "shareable_generator_id": "shareable_generator",
+          "train_task_name": "train",
+          "train_timeout": 0
+        }
+      }
+    ]
+  }

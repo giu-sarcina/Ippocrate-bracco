@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    @apply text-[rgba(255,255,255,0.87)] bg-[#020e16] font-sans;
+  }
+
+  body {
+    @apply grid place-items-center min-w-[320px] min-h-screen relative m-0;
+  }
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+
+/* Custom scrollbar for the specific div */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 7px; /* Make the scrollbar thin */
+  background: transparent; /* Transparent background */
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3); /* Slightly visible thumb */
+  border-radius: 10px; /* Rounded edges */
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5); /* Slightly more visible on hover */
+}
+
+.overflow-x-auto::-webkit-scrollbar-button {
+  display: none; /* Remove arrows at the extremes */
+}
+
+/* Custom scrollbar for the global vertical scrollbar */
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  width: 7px; /* Make the scrollbar thin */
+  background: transparent; /* Transparent background */
+}
+
+html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3); /* Slightly visible thumb */
+  border-radius: 10px; /* Rounded edges */
+}
+
+html::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5); /* Slightly more visible on hover */
+}
+
+html::-webkit-scrollbar-button, body::-webkit-scrollbar-button {
+  display: none; /* Remove arrows at the extremes */
+}

@@ -1,0 +1,37 @@
+{
+"format_version": 2,
+"components": [
+    {
+    "id": "persistor",
+    "path": "nvflare.app_common.np.np_model_persistor.NPModelPersistor",
+    "args": {}
+    },
+    {
+    "id": "shareable_generator",
+    "path": "nvflare.app_common.shareablegenerators.full_model_shareable_generator.FullModelShareableGenerator",
+    "args": {}
+    },
+    {
+    "id": "aggregator",
+    "path": "FID_aggregator.FIDAggregator",
+    "args": {}
+        }
+],
+"workflows": [
+    {
+    "path": "FID_controller.FIDController",  
+    "args": {
+        "results_path": "/home/federation_kit/federated_FID/results",
+        "min_clients": 1,
+        "num_rounds": 1,
+        "start_round": 0,
+        "wait_time_after_min_received": 10,
+        "aggregator_id": "aggregator",
+        "persistor_id": "persistor",
+        "shareable_generator_id": "shareable_generator",
+        "train_task_name": "FID_to_similarity",
+        "train_timeout": 6000
+    }
+    }
+]
+}

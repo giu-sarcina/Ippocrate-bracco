@@ -1,0 +1,7 @@
+Versione v.0.2 - modifiche effettuate rispetto a v.0.1: 
+- aggiunta cartella per gestione di dati genomici (genomics --> structure_builder.py)
+- modifica input_checks --> input_check_and_patient_mapping.py (ora il file patients.csv viene sempre generato dal codice ed è stata aggiunta la colonna "Genomic Data Available". Migliorati i controlli)
+- in Local_config: sostituito "image" con "radiological data"
+- modifica clinical --> validation.py and preprocessing.py (gestione caso in cui ci sono solo dati continui o solo dati discontinui)
+- modificate tutte le funzioni "save labels" sul salvataggio di label in output (modifica di percorsi di modo che funzionino indipendentemente dal sistema operativo)
+- modificati tutti i path di input di modo da adattarli alla nuova struttura (CLINICAL, IMAGES, GENOMICS)

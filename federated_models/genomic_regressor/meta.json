@@ -1,0 +1,10 @@
+{
+    "name": "reg_fedavg",
+    "min_clients": 1,
+    "resource_spec": {},
+  "deploy_map": {
+    "app": [
+      "@ALL"
+    ]
+  }
+}
