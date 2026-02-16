@@ -19,20 +19,11 @@ from torch.utils.data import DataLoader
 from pathlib import Path
 
 # Get connection params from environment
-'''
-config = dict(DB_NAME=os.getenv('POSTGRES_DB'), 
-            DB_USER=os.getenv('POSTGRES_USER'),
-            DB_PASSWORD=os.getenv('POSTGRES_PASSWORD'),
-            DB_HOST=os.getenv('POSTGRES_HOST'),
-            DB_PORT=os.getenv('POSTGRES_PORT'))
-'''
-
-DB_NAME = 'omop4ippocrate'
-DB_USER = 'giuliamaria'
-DB_PASSWORD = 'password'
-DB_HOST = "ippocratedb"
-#DB_HOST = "omop6postgres14"
-DB_PORT =  '5432'
+DB_NAME=os.getenv('POSTGRES_DB')
+DB_USER=os.getenv('POSTGRES_USER')
+DB_PASSWORD=os.getenv('POSTGRES_PASSWORD')
+DB_HOST=os.getenv('POSTGRES_HOST')
+DB_PORT=os.getenv('POSTGRES_PORT')
 
 config = {
     "dbname": DB_NAME,
@@ -511,7 +502,7 @@ class TorchIOImageDataset(Dataset):
                     val_array = np.load(t) 
                     val_array = torch.from_numpy(val_array)
                     val_array = fix_shape(val_array)
-                    val = tio.LabelMap(tensor=val_array)
+                    #val = tio.LabelMap(tensor=val_array)
                     # torchIO Subject
                     fields["mask"] = tio.LabelMap(tensor=val_array)
                                    

@@ -14,6 +14,14 @@
 
 import json
 import os
+#WORKSPACE
+from nvflare.apis.workspace import Workspace # FLContextKey.WORKSPACE_OBJECT
+#CONSTANTS
+from nvflare.apis.event_type import EventType #EventType.END_RUN
+from nvflare.apis.fl_constant import FLContextKey # FLContextKey.WORKSPACE_OBJECT 
+from nvflare.apis.fl_constant import FLMetaKey # FLMetaKey.CURRENT_ROUND, FLMetaKey.JOB_ID
+from nvflare.app_common.app_constant import AppConstants #AppConstants.IS_BEST
+
 import pandas as pd
 import numpy as np
 import random
@@ -68,14 +76,14 @@ class Ensure4D(tio.Transform):
         img.set_data(t)
         return img
 
-class SupervisedMonaiProstateLearner(SupervisedLearner):
+class SupervisedProstateLearner(SupervisedLearner):
     def __init__(
         self,
         train_config_filename,
         aggregation_epochs: int = 1,
         train_task_name: str = AppConstants.TASK_TRAIN,
     ):
-        """MONAI Learner for prostate segmentation task.
+        """Learner for prostate segmentation task.
         It inherits from SupervisedLearner.
 
         Args:
@@ -93,13 +101,23 @@ class SupervisedMonaiProstateLearner(SupervisedLearner):
         self.train_config_filename = train_config_filename
         self.config_info = None
 
+    def finalize(self, fl_ctx: FLContext):
+        # collect threads, close files here
+        # save the model locally 
+
+        # tensorboard streaming 
+        
+        pass
+
     def train_config(self, fl_ctx: FLContext):
-        """MONAI traning configuration
+        """Traning configuration
         Here, we use a json to specify the needed parameters
         """
         ### LOAD TRAIN CONFIG FILE ###
         engine = fl_ctx.get_engine()
         ws = engine.get_workspace()
+
+        # CONFIGURAZIONE
         app_config_dir = ws.get_app_config_dir(fl_ctx.get_job_id())
         train_config_file_path = os.path.join(app_config_dir, self.train_config_filename)
         if not os.path.isfile(train_config_file_path):
@@ -109,17 +127,19 @@ class SupervisedMonaiProstateLearner(SupervisedLearner):
             )
         with open(train_config_file_path) as file:
             self.config_info = json.load(file)
-        
-        #self.log_info(fl_ctx, print_config())
 
         # Get the config_info
-        self.lr = self.config_info["learning_rate"]
-        self.batch_size = self.config_info['batch_size']
-        self.central = self.config_info['central']
-        self.gpu = self.config_info['gpu']
-        self.roi_size = self.config_info.get("roi_size", (32, 224, 224))
-        self.infer_roi_size = self.config_info.get("infer_roi_size", (32, 224, 224))
-
+        ##training hyperparameters
+        self.lr = self.config_info.get("learning_rate", 0.001)
+        self.batch_size = self.config_info.get('batch_size', 1)
+        self.central = self.config_info.get('central', False)
+        self.gpu = self.config_info.get('gpu', 'cuda:0')
+        ##architecture and input 
+        self.unet_input_dim = self.config_info.get("unet_input_dim", 3)
+        self.n_unet_blocks=self.config_info.get("n_unet_blocks", 3)
+        self.roi_size = self.config_info.get("roi_size", [128, 128, 32])
+        self.in_channels = self.config_info.get("in_channels", 1)
+        self.out_channels = self.config_info.get("out_channels", 1)
         #series 
         self.series_name = self.config_info['series_name']
         self.target_type = self.config_info['target_type']
@@ -151,10 +171,10 @@ class SupervisedMonaiProstateLearner(SupervisedLearner):
             ):
         '''
         self.model = UNet3D(
-                in_channels=1,
-                out_classes=1,
-                dimensions=3,
-                num_encoding_blocks=3,
+                in_channels=int(self.in_channels),
+                out_classes=int(self.out_channels),
+                dimensions=int(self.unet_input_dim),
+                num_encoding_blocks=int(self.n_unet_blocks),
                 out_channels_first_layer=8,
                 normalization='batch',
                 upsampling_type='linear',
@@ -165,13 +185,13 @@ class SupervisedMonaiProstateLearner(SupervisedLearner):
 
         self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=0.9)
         self.criterion = DiceLoss( sigmoid_normalization=True,)
-        self.valid_metric = DiceCoefficient()
+        self.valid_metric = DiceLoss( sigmoid_normalization=True,) #DiceCoefficient()
         
         #self.inferer = SlidingWindowInferer(roi_size=self.infer_roi_size, sw_batch_size=4, overlap=0.25)
 
         ### TRANSFORMS ###
         self.transform_train = tio.Compose([     
-            tio.CropOrPad((512, 512, 64)),  
+            tio.CropOrPad(tuple(self.roi_size), mask_name = "mask"),  
             tio.RandomFlip(axes=(0,), flip_probability=0.5),   
             tio.RandomFlip(axes=(1,), flip_probability=0.5),  
             tio.ZNormalization(masking_method=lambda x: x > torch.tensor(0)),       
@@ -182,15 +202,15 @@ class SupervisedMonaiProstateLearner(SupervisedLearner):
         ])
         
         self.transform_valid = tio.Compose([        
-            tio.CropOrPad((512, 512, 64)),  
+            tio.CropOrPad(tuple(self.roi_size), mask_name = "mask"),  
             tio.ZNormalization(masking_method=lambda x: x > torch.tensor(0)),
-            tio.EnsureShapeMultiple(8, method='pad')  ,
+            tio.EnsureShapeMultiple(8, method='pad')  , # perchè la rete ha 2^3 blocchi di downsampling/upsampling
             tio.To(torch.float32)                 
         ])
        
         # MASK POST PROCESSING
         self.transform_post = tio.Compose([         
-            tio.CropOrPad((512, 512, 64)), 
+            tio.CropOrPad(tuple(self.roi_size), mask_name = "mask"),  
             tio.EnsureShapeMultiple(8, method='pad') ,  
             tio.To(torch.float32)                 
         ])
@@ -222,3 +242,32 @@ class SupervisedMonaiProstateLearner(SupervisedLearner):
                                     batch_size=self.batch_size, 
                                     shuffle=False, 
                                     num_workers=1)
+
+    #Giulia : save the final model at the end of training
+    def handle_event(
+        self,
+        event_type: str,
+        fl_ctx: FLContext):
+        super().handle_event(event_type, fl_ctx)
+
+        if event_type == EventType.END_RUN:
+            ws: Workspace = fl_ctx.get_prop(FLContextKey.WORKSPACE_OBJECT)
+            job_id = fl_ctx.get_job_id()
+            run_dir = ws.get_run_dir(job_id)  
+            
+            #current_round = shareable.get_header(AppConstants.CURRENT_ROUND)
+            
+            round_num = fl_ctx.get_prop(AppConstants.CURRENT_ROUND)#FLContextKey.CURRENT_RUN
+            save_path = os.path.join(
+                run_dir,
+                f"model_round_{round_num}.pth"
+            )
+
+            torch.save(self.model.state_dict(), save_path)
+            self.log_info(fl_ctx, f"Model saved at {save_path}")
+
+            # save best model
+            if fl_ctx.get_prop(AppConstants.IS_BEST, False):
+                best_save_path = os.path.join(run_dir, f"best_model-round_{round_num}.pth")
+                torch.save(self.model.state_dict(), best_save_path)
+                self.log_info(fl_ctx, f"Best model updated at {best_save_path}") 

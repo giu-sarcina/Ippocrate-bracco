@@ -1,7 +1,7 @@
 {
     "format_version": 2,
     "min_clients": 1,
-    "num_rounds": 1,
+    "num_rounds": 5,
     "server": {
       "heart_beat_timeout": 600
     },
@@ -31,6 +31,14 @@
         }
       },
       {
+        "id" : "tb_receiver",
+        "path" : "nvflare.app_opt.tracking.tb.tb_receiver.TBAnalyticsReceiver",
+        "args" : {
+              "tb_folder":"tensorboard",
+              "events": ["fed.analytix_log_stats"]},
+        "type" : "handler"
+      },
+      {
         "id": "shareable_generator",
         "name": "FullModelShareableGenerator",
         "args": {}
@@ -45,7 +53,7 @@
         "name": "IntimeModelSelector",
         "args": {
           "weigh_by_local_iter": true
-        }
+      }
       }
     ],
     "workflows": [

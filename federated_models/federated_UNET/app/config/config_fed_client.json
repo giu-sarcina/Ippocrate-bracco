@@ -4,7 +4,8 @@
     "executors": [
       {
         "tasks": [
-          "train", "validate"
+          "train", 
+          "validate"
         ],
         "executor": {
           "id": "Executor",
@@ -23,10 +24,24 @@
   
     "components": [
       { "id": "prostate-learner",
-        "path": "learners.supervised_prostate_learner.SupervisedMonaiProstateLearner",
+        "path": "learners.supervised_prostate_learner.SupervisedProstateLearner",
         "args": {
           "train_config_filename": "config_train.json",
-          "aggregation_epochs": 10}
+          "aggregation_epochs":2}
+      },
+
+      {
+      "id": "log_writer",
+      "path": "nvflare.app_opt.tracking.tb.tb_writer.TBWriter",
+      "args": {"event_type": "analytix_log_stats"}
+      },
+      
+      {
+        "id": "tb_converter",
+        "path": "nvflare.app_common.widgets.convert_to_fed_event.ConvertToFedEvent",
+        "args": {"events_to_convert": ["analytix_log_stats"]},
+        "type":"handler"
       }
+      
     ]
   }

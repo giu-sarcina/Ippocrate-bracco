@@ -1,8 +1,9 @@
 {
     "learning_rate": 1e-2,
-    "batch_size" : 2,
-    "central" : true,
+    "batch_size" :5,
+    "central" : false,
     "series_name" : "series001_mri",
     "target_type" : "seg",
-    "gpu" : "cuda:0"
+    "gpu" : "cuda:0",
+    "n_unet_blocks":3
   }

@@ -17,7 +17,11 @@ from abc import abstractmethod
 
 import numpy as np
 import torch
+
 from torch.utils.tensorboard import SummaryWriter
+from nvflare.app_opt.tracking.tb.tb_writer import TBWriter
+
+import torch.nn.functional as F
 
 from nvflare.apis.dxo import DXO, DataKind, MetaKey, from_shareable
 from nvflare.apis.fl_constant import FLContextKey, ReturnCode
@@ -26,6 +30,9 @@ from nvflare.apis.shareable import Shareable, make_reply
 from nvflare.apis.signal import Signal
 from nvflare.app_common.abstract.learner_spec import Learner
 from nvflare.app_common.app_constant import AppConstants, ValidateType
+
+import os
+
 
 
 class SupervisedLearner(Learner):
@@ -65,6 +72,7 @@ class SupervisedLearner(Learner):
         engine = fl_ctx.get_engine()
         ws = engine.get_workspace()
         app_dir = ws.get_app_dir(fl_ctx.get_job_id())
+        tb_dir=os.path.join(app_dir, "tensorboard")
 
         # get and print the args
         fl_args = fl_ctx.get_prop(FLContextKey.ARGS)
@@ -75,7 +83,11 @@ class SupervisedLearner(Learner):
         )
 
         # set local tensorboard writer for local validation score of global model
-        self.writer = SummaryWriter(app_dir)
+        self.writer = SummaryWriter(tb_dir)
+        # --- Invia a NVFlare come analyticslogstats ---
+        self.fed_writer= TBWriter(event_type='fed.analytix_log_stats') #b_folder=tb_dir
+
+
         # set the training-related contexts, this is task-specific
         self.train_config(fl_ctx)
 
@@ -104,7 +116,12 @@ class SupervisedLearner(Learner):
     @abstractmethod
     def finalize(self, fl_ctx: FLContext):
         # collect threads, close files here
+        # save the model locally 
         pass
+    
+    def get_model_for_validation(self, model_name: str, fl_ctx: FLContext) -> Shareable:
+        # Return the model weights for validation
+        return self.model.state_dict()
 
     def local_train(
         self,
@@ -135,17 +152,26 @@ class SupervisedLearner(Learner):
 
                 inputs = batch_data[0][0].to(self.device)
                 labels = batch_data[0][1].to(self.device)
-                labels = torch.where(labels == 255, 1, 0)
 
                 print(f"################# Train batch {i}: inputs shape {inputs.shape}, labels shape {labels.shape} ###################")
                 # forward + backward + optimize
                 outputs = self.model(inputs) ################
+
+                # manage multiclass segmentation
+                outputs = outputs.squeeze(1) #delete output channel dimension 
+                labels = labels.squeeze(1).long()   # manage multiclass segmentation
+
                 loss = self.criterion(outputs, labels)
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+
                 current_step = epoch_len * self.epoch_global + i
-                self.writer.add_scalar("train_loss", loss.item(), current_step)
+                #self.writer.add_scalar("train_loss", loss.item(), current_step)
+                self.writer.add_scalar(f"{self.client_id}/train/loss", loss.item(), current_step)
+                self.fed_writer.add_scalar(f"{self.client_id}/train/loss", loss.item(), current_step)
+                # Esegui una volta per inviare tutto
+                #self.sender.send_all()
 
     def local_valid(
         self,
@@ -176,19 +202,24 @@ class SupervisedLearner(Learner):
                 val_outputs = model(val_images) #self.inferer(val_images, model)
                 #val_outputs = self.transform_post(val_outputs)
                 # Compute metric
-                metric_score = self.valid_metric(input=val_outputs, target=val_labels)
+                metric_score = 1 - self.valid_metric(input=val_outputs, target=val_labels)
                 
                 # compute mean dice over batch
                 metric += torch.mean(metric_score).item()
 
             # compute mean dice over whole validation set
             metric /= len(valid_loader)
+            name = f"{self.client_id}/validation/"+ tb_id
             # tensorboard record id, add to record if provided
             if tb_id:
-                self.writer.add_scalar(tb_id, metric, record_epoch)
+                #self.writer.add_scalar(tb_id, metric, record_epoch)
+                self.writer.add_scalar(name, metric, record_epoch)
+                self.fed_writer.add_scalar(name, metric, record_epoch)
+                #self.sender.send_all()
+
         return metric
 
-    def train(
+    def train( 
         self,
         shareable: Shareable,
         fl_ctx: FLContext,
@@ -254,6 +285,7 @@ class SupervisedLearner(Learner):
 
         # flush the tb writer
         self.writer.flush()
+        self.fed_writer.flush()
 
         # build the shareable
         dxo = DXO(data_kind=DataKind.WEIGHT_DIFF, data=model_diff)
