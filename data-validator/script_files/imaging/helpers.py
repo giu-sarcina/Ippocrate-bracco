@@ -152,7 +152,7 @@ def count_tot_num_slices_per_group(series_path, image_file_format):
     """Counts the number of slices in the given series folder based on the image file format."""
     try:
         if image_file_format in [".nii", ".nii.gz"]:
-            nifti_file = [f for f in os.listdir(series_path) if f.endswith('.nii')][0]
+            nifti_file = [f for f in os.listdir(series_path) if f.endswith('.nii') or f.endswith('.nii.gz')][0]
             nifti_path = os.path.join(series_path, nifti_file)
             img = nib.load(nifti_path)
             num_slices = img.shape[-1]

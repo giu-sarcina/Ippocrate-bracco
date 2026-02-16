@@ -117,8 +117,14 @@ class ImageStructureAndLabelValidator:
 
         # Iterate over the patient folders and attempt to map them to the new patient IDs
         for old_id in patient_folders:
-            if old_id in image_mapping:
-                new_id = image_mapping[old_id]
+            if old_id.isdigit():
+                old_id_int = int(old_id)  # "020" -> 20
+                key_to_lookup = old_id_int
+            else:
+                key_to_lookup = old_id # keep as string
+
+            if key_to_lookup in image_mapping:
+                new_id = image_mapping[key_to_lookup]
                 old_folder_path = os.path.join(self.images_dir, old_id)
                 new_folder_path = os.path.join(self.output_directory_data, new_id)
     

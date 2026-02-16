@@ -143,7 +143,18 @@ class NiftiSegReorientPreprocessor:
                         full_series_key = full_series_key.replace("/", "\\")
                    
                     new_series_name = series_id_map.get(full_series_key)
-                    new_patient_id = patient_id_map.get(orig_patient_id)
+                    
+                    orig_patient_id_str = str(orig_patient_id)
+                    new_patient_id = patient_id_map.get(orig_patient_id_str)
+
+                    if new_patient_id is None:
+                        for k, v in patient_id_map.items():
+                            try:
+                                if int(k) == int(orig_patient_id_str):
+                                    new_patient_id = v
+                                    break
+                            except ValueError:
+                                continue
 
                     if new_series_name and "_" in new_series_name:
                         parts = new_series_name.split("_")

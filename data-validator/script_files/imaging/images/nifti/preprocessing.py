@@ -124,7 +124,7 @@ class NiftiReorientPreprocessor:
         return reoriented_data_lps, new_affine, reoriented_occurred
         
     
-    def check_and_reorient_niftivolumes(self): #ok # il tensore salvato qui ha il numero di slice in terza posizione (240, 240, 155)
+    def check_and_reorient_niftivolumes(self): #ok #il tensore salvato qui ha il numero di slice in terza posizione (240, 240, 155)
         """
         Iterates over all volume NIfTI files in the series folders, checking if they are in LPS orientation,
         reorienting them if needed, and saving:
@@ -151,8 +151,12 @@ class NiftiReorientPreprocessor:
             patient_folder_path = os.path.join(self.images_dir, orig_patient_id)
             if os.path.isdir(patient_folder_path):
 
-                # Map to new patient ID
-                new_patient_id = patient_id_map.get(orig_patient_id)
+                if orig_patient_id.isdigit(): 
+                    lookup_key = int(orig_patient_id)  # "020" -> 20
+                else:
+                    lookup_key = orig_patient_id
+
+                new_patient_id = patient_id_map.get(lookup_key)
 
                 if not new_patient_id:
                     print(f"Warning: No mapping for patient ID {orig_patient_id}")
@@ -476,6 +480,20 @@ class NiftiReorientPreprocessor:
 
         # normalize mapping keys 
         series_mapping = {os.path.normpath(k): v for k, v in series_mapping.items()} 
+
+        normalized_series_mapping = {}
+
+        for k, v in series_mapping.items():
+            patient_part, series_part = os.path.normpath(k).split(os.sep)
+
+            # normalize patient id numerically
+            if patient_part.isdigit():
+                patient_part = str(int(patient_part))
+
+            new_key = os.path.join(patient_part, series_part)
+            normalized_series_mapping[new_key] = v
+
+        series_mapping = normalized_series_mapping
 
         # Reverse maps for original IDs
         reversed_patient_id_map = {v: k for k, v in patient_id_map.items()}
@@ -846,7 +864,7 @@ class NiftiReorientPreprocessor:
             )
         """
         
-        def on_rm_error(func, path, exc_info):
+        def on_rm_error(func, path):
             os.chmod(path, stat.S_IWRITE)  # remove read-only restriction
             func(path)  # retry the operation
             
@@ -924,7 +942,18 @@ class NiftiReorientPreprocessor:
                 
             # Delete from input_dir (original name)
             orig_patient_id = reversed_patient_id_map.get(patient_id, patient_id)
-            input_folder_path = os.path.join(self.images_dir, orig_patient_id)
+            orig_patient_id_str = str(orig_patient_id)
+
+            # Try direct match first
+            input_folder_path = os.path.join(self.images_dir, orig_patient_id_str)
+
+            if not os.path.exists(input_folder_path):
+                # Try to find matching folder ignoring leading zeros
+                for folder_name in os.listdir(self.images_dir):
+                    if folder_name.isdigit() and int(folder_name) == int(orig_patient_id):
+                        input_folder_path = os.path.join(self.images_dir, folder_name)
+                        break
+
             if os.path.exists(input_folder_path):
                 shutil.rmtree(input_folder_path, onerror=on_rm_error)
 

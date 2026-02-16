@@ -1,4 +1,4 @@
-Versione v.0.2 - modifiche effettuate rispetto a v.0.1: 
+Versione v.0.2 DOCKER - modifiche effettuate rispetto a v.0.1: (funziona nel container, non in locale)
 - aggiunta cartella per gestione di dati genomici (genomics --> structure_builder.py)
 - modifica input_checks --> input_check_and_patient_mapping.py (ora il file patients.csv viene sempre generato dal codice ed è stata aggiunta la colonna "Genomic Data Available". Migliorati i controlli)
 - in Local_config: sostituito "image" con "radiological data"
