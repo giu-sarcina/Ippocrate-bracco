@@ -42,7 +42,8 @@ class CheckPhaseMappingLoader:
         
 def run_mappingfile_load_and_check():
     mapping_path = os.getenv("MAPPINGFILE_DIR")  #os.getenv("MAPPINGFILE_DIR", "/root/MAPPINGFILE") #"C:/Users/cristina.iudica/OneDrive - Bracco Imaging SPA/Documenti/ROOT_x-rays_CLIENT_2/MAPPINGFILE"
-    mapping_filename = "check_phases_mapping_v.0.5.json"
+    mapping_filename = "check_phases_mapping_v.0.6.json"
     mapping_loader = CheckPhaseMappingLoader(input_path=mapping_path, mapping_filename=mapping_filename)
     mapping_file = mapping_loader.load_mapping()
     return mapping_file
+
