@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   data-validator_demo:
     image: data-validator
@@ -54,8 +52,8 @@ services:
     env_file: ./.env
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
-     # - NVIDIA_DISABLE_REQUIRE=1
-    working_dir: /home/${POSTGRES_USER}
+      - NVIDIA_DISABLE_REQUIRE=1
+    working_dir: /home
     volumes:
       - ${HOST_ROOT_DIR}/CLINICAL:/home/clinical_data 
       - ${HOST_ROOT_DIR}/IMAGES:/home/images 
