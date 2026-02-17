@@ -531,7 +531,7 @@ class NiftiReorientPreprocessor:
   
             # Construct the full key with both patient ID and series name (like "ID14\\1.000000-3DAXT1postcontrast-17667")
             full_series_name = os.path.normpath(
-                os.path.join(orig_patient_id, orig_series_id)
+                os.path.join(str(orig_patient_id), str(orig_series_id))
             )
 
             if full_series_name not in series_mapping:
@@ -1567,4 +1567,5 @@ def run_nifti_reorient_preprocessor(protocol, local_config, mapping_file, series
 
 
     
+
 
