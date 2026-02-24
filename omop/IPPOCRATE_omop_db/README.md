@@ -149,8 +149,8 @@ python3 ./exec_files/PopulateDB/ETL.py
 ```
 ## Quick commands
 ```shell
-psql -U $POSTGRES_USER -d $POSTGRES_DB -c "\c omop4ippocrate" -c "CREATE SCHEMA omopcdm;"
-psql -U $POSTGRES_USER -d $POSTGRES_DB -f "/home/omopv6ddl/OHDSI_PostgreSQL_DDLs/OMOP_CDM_postgresql_ddl.txt"
+psql -U $POSTGRES_USER -d $POSTGRES_DB -p $POSTGRES_PORT -c "\c omop4ippocrate" -c "CREATE SCHEMA omopcdm;"
+psql -U $POSTGRES_USER -d $POSTGRES_DB -P $POSTGRES_PORT -f "/home/omopv6ddl/OHDSI_PostgreSQL_DDLs/OMOP_CDM_postgresql_ddl.txt"
 python3 /home/exec_files/ConfigDB/ALTER_and_ADD_tables.py
 python3 /home/exec_files/PopulateDB/ETL.py
 
